@@ -30,6 +30,8 @@ for(var i = 0; i < NUM_COLUMNS; i++) {
     slimeColumns[i] = { column: columnDivs[i] };
 }
 
+var ie11 = !!window.MSInputMethodContext && !!document.documentMode;
+
 var missileFiring = false;
 
 var missile = document.querySelector(".missile-container");
@@ -126,7 +128,7 @@ function newQuestion(pointDelta, filter) {
         if(fishSources.indexOf(fishTarget.src) == -1)
             fishSources.push(fishTarget.src);
     }
-    diver.classList.add("diver-swims-" + (Math.random() < 0.5 ? "right" : "left"));
+    diver.classList.add("diver-swims-" + ((!ie11 && Math.random() < 0.5) ? "right" : "left"));
     diver.style.display = "";
 
     var questionSpan = document.querySelector("#question-span");
@@ -225,7 +227,7 @@ function onIceCreamClick(e) {
     newQuestion(n == currentCorrectAnswer ? 5 : -5, icecream.getAttribute("data-filter"));
 }
 
-columnDivs.forEach(icecream => icecream.addEventListener("click", onIceCreamClick));
+columnDivs.forEach(function(icecream) { icecream.addEventListener("click", onIceCreamClick) });
 
 document.querySelector(".ocean > img").style.transition = "transform 2s linear";
 

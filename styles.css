@@ -829,3 +829,14 @@ html, body, #game-container {
 .target-number {
     width: 14em;
 }
+
+/* IE11 hacks */
+@media all and (-ms-high-contrast:none)
+{
+    *::-ms-backdrop, .picture-container img {
+        width: 150px;
+        height: 100px;
+        flex: none;
+        max-width: none;
+    }
+}
