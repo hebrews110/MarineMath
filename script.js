@@ -24,6 +24,8 @@ var fishSources = [];
 
 var aimerColumn = 0;
 
+var loadingIndicator = document.querySelector("#loading");
+
 var slimeColumns = [];
 
 for(var i = 0; i < NUM_COLUMNS; i++) {
@@ -117,107 +119,118 @@ function newQuestion(pointDelta, filter) {
     else if(pointDelta > 0)
         correctSound.play();
     
-
+    var prom = Promise.resolve();
     if(pointDelta < 0) {
         numSad++;
         fishTarget.style.visibility = "hidden";
     } else if(pointDelta > 0) {
         numHappy++;
         fishTarget.style.visibility = "visible";
-        fishTarget.src = "fish/" + fishes[getRandomIntInclusive(0, fishes.length - 1)] + ".svg";
+        prom = new Promise(function(resolve) {
+            function ev() {
+                fishTarget.removeEventListener("load", ev);
+                resolve();
+            }
+            fishTarget.addEventListener("load", ev);
+            fishTarget.src = "fish/" + fishes[getRandomIntInclusive(0, fishes.length - 1)] + ".svg";
+        });
         if(fishSources.indexOf(fishTarget.src) == -1)
             fishSources.push(fishTarget.src);
     }
-    diver.classList.add("diver-swims-" + ((!ie11 && Math.random() < 0.5) ? "right" : "left"));
-    diver.style.display = "";
 
     var questionSpan = document.querySelector("#question-span");
     questionSpan.innerHTML = pointDelta < 0 ? ("Correct answer: " + currentCorrectAnswer) : "";
     questionSpan.style.color = pointDelta < 0 ? "red" : "";
     answersContainer.style.display = "none";
     icecreams.classList.add("bowls-hidden");
-    setTimeout(function() {
-        currentQuestion++;
-        var percent = currentQuestion / NUM_QUESTIONS;
-        /*
-        if(percent <= 0) {
-            document.getElementById("fail-dialog").style.display = "";
-            return;
-        }
-        */
-        if(currentQuestion == NUM_QUESTIONS) {
-            document.getElementById("win-dialog").style.display = "";
-            return;
-        }
-        
-        var correctInitialColumn = getRandomIntInclusive(0, NUM_COLUMNS - 1);
-        ocean.style.transform = "translateX(-50%) translateY(-" + (percent * 100) + "%) translateY(-" + ((1-percent) * 100) + "vh)";
-        currentCorrectAnswer = getRandomIntInclusive((operation == "add" && maxResultSize == 10) ? 2 : 1, maxResultSize);
-        var firstFactor, secondFactor, symbol;
-        
-        if(operation != null)
-            operation = operation.trim();
-        
-        if(operation == "add") {
-            symbol = "&plus;";
-            firstFactor = getRandomIntInclusive(1, currentCorrectAnswer - (maxResultSize == 10 ? 1 : 0));
-            secondFactor = currentCorrectAnswer - firstFactor;
-        } else if(operation == "subtract") {
-            symbol = "&minus;";
-            currentCorrectAnswer = getRandomIntInclusive(1, maxResultSize);
-            secondFactor = getRandomIntInclusive(1, maxResultSize);
-            firstFactor = currentCorrectAnswer + secondFactor;
-        } else if(operation == "multiply") {
-            symbol = "&times;";
-            firstFactor = getRandomIntInclusive(1, maxResultSize);
-            secondFactor = getRandomIntInclusive(1, maxResultSize);
-            currentCorrectAnswer = firstFactor * secondFactor;
-        } else if(operation == "divide") {
-            var divisor = getRandomIntInclusive(2, 6);
-            firstFactor = currentCorrectAnswer * divisor;
-            secondFactor = divisor;
-            symbol = "&divide;";
-        } else
-            window.alert("Unknown ?operation");
-        
-        var incorrectAnswers = [];
-        for(var i = 0; i < (NUM_COLUMNS-1); i++) {
-            var value;
-            do {
-                value = getRandomIntInclusive(0, currentCorrectAnswer + 5);
-            } while(incorrectAnswers.indexOf(value) != -1 || value == currentCorrectAnswer);
-            incorrectAnswers.push(value);
-        }
-        for(var i = 0; i < NUM_COLUMNS; i++) {
-            regenerateColumn(i, i == correctInitialColumn ? currentCorrectAnswer : incorrectAnswers.pop());
-            slimeColumns[i].isCorrect = i == correctInitialColumn;
-        }
-        firstTry = true;
-        if(pointDelta > 0) {
-            oceanContainer.classList.add("shutterClick");
-            cameraSound.play();
-        }
+    loadingIndicator.style.display = "inline-block";
+    prom.then(function() {
+        loadingIndicator.style.display = "none";
+        diver.classList.add("diver-swims-" + ((!ie11 && Math.random() < 0.5) ? "right" : "left"));
+        diver.style.display = "";
         setTimeout(function() {
-            oceanContainer.classList.remove("shutterClick");
-            diver.classList.remove("diver-swims-left");
-            diver.classList.remove("diver-swims-right");
-            diver.style.display = "none";
-            icecreams.classList.remove("bowls-hidden");
-            questionContainer.style.display = "";
-            questionSpan.innerHTML = "" + firstFactor + " " + symbol + " " + secondFactor + " = ?";
-            questionSpan.style.color = "";
-            if(fishSources.length == fishPictures.length) {
-                console.log(fishSources.length, fishPictures.length);
-                for(var i = 0; i < fishSources.length; i++) {
-                    fishPictures[i].src = fishSources[i];
-                }
-                fishSources = [];
-                document.querySelector("#picture-dialog").style.display = "";
-            } else {
-                answersContainer.style.display = "";
+            currentQuestion++;
+            var percent = currentQuestion / NUM_QUESTIONS;
+            /*
+            if(percent <= 0) {
+                document.getElementById("fail-dialog").style.display = "";
+                return;
             }
-        }, pointDelta == 0 ? 0 : (4500/6000)*ANIMATION_SPEED);
-    }, pointDelta == 0 ? 0 : (1000/6000)*ANIMATION_SPEED);
+            */
+            if(currentQuestion == NUM_QUESTIONS) {
+                document.getElementById("win-dialog").style.display = "";
+                return;
+            }
+            
+            var correctInitialColumn = getRandomIntInclusive(0, NUM_COLUMNS - 1);
+            ocean.style.transform = "translateX(-50%) translateY(-" + (percent * 100) + "%) translateY(-" + ((1-percent) * 100) + "vh)";
+            currentCorrectAnswer = getRandomIntInclusive((operation == "add" && maxResultSize == 10) ? 2 : 1, maxResultSize);
+            var firstFactor, secondFactor, symbol;
+            
+            if(operation != null)
+                operation = operation.trim();
+            
+            if(operation == "add") {
+                symbol = "&plus;";
+                firstFactor = getRandomIntInclusive(1, currentCorrectAnswer - (maxResultSize == 10 ? 1 : 0));
+                secondFactor = currentCorrectAnswer - firstFactor;
+            } else if(operation == "subtract") {
+                symbol = "&minus;";
+                currentCorrectAnswer = getRandomIntInclusive(1, maxResultSize);
+                secondFactor = getRandomIntInclusive(1, maxResultSize);
+                firstFactor = currentCorrectAnswer + secondFactor;
+            } else if(operation == "multiply") {
+                symbol = "&times;";
+                firstFactor = getRandomIntInclusive(1, maxResultSize);
+                secondFactor = getRandomIntInclusive(1, maxResultSize);
+                currentCorrectAnswer = firstFactor * secondFactor;
+            } else if(operation == "divide") {
+                var divisor = getRandomIntInclusive(2, 6);
+                firstFactor = currentCorrectAnswer * divisor;
+                secondFactor = divisor;
+                symbol = "&divide;";
+            } else
+                window.alert("Unknown ?operation");
+            
+            var incorrectAnswers = [];
+            for(var i = 0; i < (NUM_COLUMNS-1); i++) {
+                var value;
+                do {
+                    value = getRandomIntInclusive(0, currentCorrectAnswer + 5);
+                } while(incorrectAnswers.indexOf(value) != -1 || value == currentCorrectAnswer);
+                incorrectAnswers.push(value);
+            }
+            for(var i = 0; i < NUM_COLUMNS; i++) {
+                regenerateColumn(i, i == correctInitialColumn ? currentCorrectAnswer : incorrectAnswers.pop());
+                slimeColumns[i].isCorrect = i == correctInitialColumn;
+            }
+            firstTry = true;
+            if(pointDelta > 0) {
+                oceanContainer.classList.add("shutterClick");
+                cameraSound.play();
+            }
+            setTimeout(function() {
+                oceanContainer.classList.remove("shutterClick");
+                diver.classList.remove("diver-swims-left");
+                diver.classList.remove("diver-swims-right");
+                diver.style.display = "none";
+                icecreams.classList.remove("bowls-hidden");
+                questionContainer.style.display = "";
+                questionSpan.innerHTML = "" + firstFactor + " " + symbol + " " + secondFactor + " = ?";
+                questionSpan.style.color = "";
+                if(fishSources.length == fishPictures.length) {
+                    console.log(fishSources.length, fishPictures.length);
+                    for(var i = 0; i < fishSources.length; i++) {
+                        fishPictures[i].src = fishSources[i];
+                    }
+                    fishSources = [];
+                    document.querySelector("#picture-dialog").style.display = "";
+                } else {
+                    answersContainer.style.display = "";
+                }
+            }, pointDelta == 0 ? 0 : (4500/6000)*ANIMATION_SPEED);
+        }, pointDelta == 0 ? 0 : (1000/6000)*ANIMATION_SPEED);    
+    });
     
 }
 
