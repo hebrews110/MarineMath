@@ -126,12 +126,17 @@ function newQuestion(pointDelta, filter) {
     } else if(pointDelta > 0) {
         numHappy++;
         fishTarget.style.visibility = "visible";
-        prom = new Promise(function(resolve) {
+        prom = new Promise(function(resolve, reject) {
             function ev() {
                 fishTarget.removeEventListener("load", ev);
                 resolve();
             }
+            function ev2() {
+                fishTarget.removeEventListener("error", ev2);
+                reject();
+            }
             fishTarget.addEventListener("load", ev);
+            fishTarget.addEventListener("error", ev2);
             fishTarget.src = "fish/" + fishes[getRandomIntInclusive(0, fishes.length - 1)] + ".svg";
         });
         if(fishSources.indexOf(fishTarget.src) == -1)
@@ -144,7 +149,7 @@ function newQuestion(pointDelta, filter) {
     answersContainer.style.display = "none";
     icecreams.classList.add("bowls-hidden");
     loadingIndicator.style.display = "inline-block";
-    prom.then(function() {
+    var cb = function() {
         loadingIndicator.style.display = "none";
         diver.classList.add("diver-swims-" + ((!ie11 && Math.random() < 0.5) ? "right" : "left"));
         diver.style.display = "";
@@ -230,7 +235,8 @@ function newQuestion(pointDelta, filter) {
                 }
             }, pointDelta == 0 ? 0 : (4500/6000)*ANIMATION_SPEED);
         }, pointDelta == 0 ? 0 : (1000/6000)*ANIMATION_SPEED);    
-    });
+    };
+    prom.then(cb, cb);
     
 }
 
