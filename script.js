@@ -209,50 +209,11 @@ function newQuestion(pointDelta, filter) {
 
             /* MATH CORE BEGIN */
             var firstFactor, secondFactor, symbol;
-            if(maxResultSize == 5 && (operation == "add")) {
-                var idx = typeof window.currentFiveIndex != 'undefined' ? window.currentFiveIndex : 0;
-                firstFactor = factsToFiveFactors[idx][0];
-                secondFactor = factsToFiveFactors[idx][1];
-                if(Math.random() <= 0.5) {
-                    var tmp = firstFactor;
-                    firstFactor = secondFactor;
-                    secondFactor = tmp;
-                }
-                currentCorrectAnswer = (operation == "add") ? (firstFactor + secondFactor) : (firstFactor - secondFactor);
-                symbol = (operation == "add") ? "&plus;" : "&minus;";
-                window.currentFiveIndex = idx + 1;
-                if(window.currentFiveIndex >= (factsToFiveFactors.length - 1)) {
-                    shuffle(factsToFiveFactors);
-                    window.currentFiveIndex = 0;
-                }
-            } else {
-                currentCorrectAnswer = getRandomIntInclusive((operation == "add" && maxResultSize == 10) ? 2 : 1, maxResultSize);
-            
-                if(operation != null)
-                    operation = operation.trim();
-                
-                if(operation == "add") {
-                    symbol = "&plus;";
-                    firstFactor = getRandomIntInclusive(1, currentCorrectAnswer - (maxResultSize == 10 ? 1 : 0));
-                    secondFactor = currentCorrectAnswer - firstFactor;
-                } else if(operation == "subtract") {
-                    symbol = "&minus;";
-                    currentCorrectAnswer = getRandomIntInclusive(1, maxResultSize);
-                    secondFactor = getRandomIntInclusive(1, maxResultSize);
-                    firstFactor = currentCorrectAnswer + secondFactor;
-                } else if(operation == "multiply") {
-                    symbol = "&times;";
-                    firstFactor = getRandomIntInclusive(1, maxResultSize);
-                    secondFactor = getRandomIntInclusive(1, maxResultSize);
-                    currentCorrectAnswer = firstFactor * secondFactor;
-                } else if(operation == "divide") {
-                    var divisor = getRandomIntInclusive(2, 6);
-                    firstFactor = currentCorrectAnswer * divisor;
-                    secondFactor = divisor;
-                    symbol = "&divide;";
-                } else
-                    window.alert("Unknown ?operation");    
-            }
+            var retrievedQuestion = window.getNextMathQuestion();
+            firstFactor = retrievedQuestion.operands[0];
+            secondFactor = retrievedQuestion.operands[1];
+            symbol = window.mathSymbol;
+            currentCorrectAnswer = retrievedQuestion.currentCorrectAnswer;
             
             /* MATH CORE END */
 
@@ -348,6 +309,7 @@ window.addEventListener("load", function() {
             }
         }).then(function(result) {
             operation = result.value;
+            window.generateMathQuestions(operation, maxResultSize);
             newQuestion(0);
         });
     });
