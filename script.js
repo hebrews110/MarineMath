@@ -75,7 +75,7 @@ var cameraSound = new Howl({
 
 var maxResultSize;
 
-var NUM_QUESTIONS = 30;
+var NUM_QUESTIONS = 18;
 
 var ANIMATION_SPEED = 3000;
 var currentQuestion = -1;
@@ -108,10 +108,47 @@ function factors(number) {
 
 var firstTry = false;
 
+const factsToFiveFactors = shuffle([
+    [ 1, 1 ],
+    [ 1, 2 ],
+    [ 1, 3 ],
+    [ 1, 4 ],
+    [ 1, 5 ],
+    [ 2, 1 ],
+    [ 2, 2 ],
+    [ 2, 3 ],
+    [ 2, 4 ],
+    [ 2, 5 ],
+    [ 3, 1 ],
+    [ 3, 2 ],
+    [ 3, 3 ],
+    [ 3, 4 ],
+    [ 3, 5 ],
+    [ 4, 1 ],
+    [ 4, 2 ],
+    [ 4, 3 ],
+    [ 4, 4 ],
+    [ 4, 5 ],
+    [ 5, 1 ],
+    [ 5, 2 ],
+    [ 5, 3 ],
+    [ 5, 4 ]
+]);
+function shuffle(a) {
+    var j, x, i;
+    for (i = a.length - 1; i > 0; i--) {
+        j = Math.floor(Math.random() * (i + 1));
+        x = a[i];
+        a[i] = a[j];
+        a[j] = x;
+    }
+    return a;
+}
 
 document.querySelector("#close-pictures").addEventListener("click", function() {
     document.querySelector("#picture-dialog").style.display = "none";
     answersContainer.style.display = "";
+    questionContainer.style.display = "";
 });
 function newQuestion(pointDelta, filter) {
     if(pointDelta < 0)
@@ -169,34 +206,17 @@ function newQuestion(pointDelta, filter) {
             
             var correctInitialColumn = getRandomIntInclusive(0, NUM_COLUMNS - 1);
             ocean.style.transform = "translateX(-50%) translateY(-" + (percent * 100) + "%) translateY(-" + ((1-percent) * 100) + "vh)";
-            currentCorrectAnswer = getRandomIntInclusive((operation == "add" && maxResultSize == 10) ? 2 : 1, maxResultSize);
+
+            /* MATH CORE BEGIN */
             var firstFactor, secondFactor, symbol;
+            var retrievedQuestion = window.getNextMathQuestion();
+            firstFactor = retrievedQuestion.operands[0];
+            secondFactor = retrievedQuestion.operands[1];
+            symbol = window.mathSymbol;
+            currentCorrectAnswer = retrievedQuestion.currentCorrectAnswer;
             
-            if(operation != null)
-                operation = operation.trim();
-            
-            if(operation == "add") {
-                symbol = "&plus;";
-                firstFactor = getRandomIntInclusive(1, currentCorrectAnswer - (maxResultSize == 10 ? 1 : 0));
-                secondFactor = currentCorrectAnswer - firstFactor;
-            } else if(operation == "subtract") {
-                symbol = "&minus;";
-                currentCorrectAnswer = getRandomIntInclusive(1, maxResultSize);
-                secondFactor = getRandomIntInclusive(1, maxResultSize);
-                firstFactor = currentCorrectAnswer + secondFactor;
-            } else if(operation == "multiply") {
-                symbol = "&times;";
-                firstFactor = getRandomIntInclusive(1, maxResultSize);
-                secondFactor = getRandomIntInclusive(1, maxResultSize);
-                currentCorrectAnswer = firstFactor * secondFactor;
-            } else if(operation == "divide") {
-                var divisor = getRandomIntInclusive(2, 6);
-                firstFactor = currentCorrectAnswer * divisor;
-                secondFactor = divisor;
-                symbol = "&divide;";
-            } else
-                window.alert("Unknown ?operation");
-            
+            /* MATH CORE END */
+
             var incorrectAnswers = [];
             for(var i = 0; i < (NUM_COLUMNS-1); i++) {
                 var value;
@@ -220,7 +240,7 @@ function newQuestion(pointDelta, filter) {
                 diver.classList.remove("diver-swims-right");
                 diver.style.display = "none";
                 icecreams.classList.remove("bowls-hidden");
-                questionContainer.style.display = "";
+                
                 questionSpan.innerHTML = "" + firstFactor + " " + symbol + " " + secondFactor + " = ?";
                 questionSpan.style.color = "";
                 if(fishSources.length == fishPictures.length) {
@@ -229,8 +249,10 @@ function newQuestion(pointDelta, filter) {
                         fishPictures[i].src = fishSources[i];
                     }
                     fishSources = [];
+                    questionContainer.style.display = "none";
                     document.querySelector("#picture-dialog").style.display = "";
                 } else {
+                    questionContainer.style.display = "";
                     answersContainer.style.display = "";
                 }
             }, pointDelta == 0 ? 0 : (4500/6000)*ANIMATION_SPEED);
@@ -287,6 +309,7 @@ window.addEventListener("load", function() {
             }
         }).then(function(result) {
             operation = result.value;
+            window.generateMathQuestions(operation, maxResultSize);
             newQuestion(0);
         });
     });
